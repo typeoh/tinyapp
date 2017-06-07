@@ -3,12 +3,25 @@
 <head>
 </head>
 
-<bodyclass="container">
+<body class="container">
 <header>
 
 </header>
 <main>
+  <ul> <% Object.keys(urls).forEach((key) => { %>
 
+      </p>
+      <li>
+      <%= key %> : <%= urls[key] %>
+       <a href="http://localhost:8080/urls/<%= key%>"> Edit </a>
+        <form action="/urls/<%= key%>/delete" method="POST">
+        <button>Delete </button>
+        </form>
+      </li>
+      <% }); %>
+      <% include partials/_header.ejs %>
+  </ul>
+    <a href= "http://localhost:8080/urls/show"> Click me!</a>
 
 <divclass="jumbotron">
 
@@ -27,17 +40,14 @@
 </main>
 
 
-
 <footer>
 
 </footer>
 
-</body>
-    <% Object.keys(urls).forEach((key) => { %>
-    <li><%= key %> : <%= urls[key] %> </li>
-    <% }); %>
-    <% include partials/_header.ejs %>
 
-    <href> https//:"deadlink" </href>
+</body>
+
+
+
 
 </html>

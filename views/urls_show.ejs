@@ -3,14 +3,14 @@
 <head>
 </head>
 
-<bodyclass="container">
-<header>
+<body class="container">
 
-</header>
+  <% include partials/_header.ejs %>
+
 <main>
 
 
-<divclass="jumbotron">
+<div class="jumbotron">
 
 
 <h1>Let's show some short urls</h1>
@@ -20,7 +20,15 @@
 
 <p>The new TinyApp</p>
 
-
+ <form method="POST" action="/urls/<%= shortURL%>">
+    <h2>Update your short URL</h2>
+    <p>
+      <label for="newlongURLinput">longURL</label>
+      <input id="newlongURLinput" name="longURL">
+      <button>Update!</button>
+    </p>
+  </form>
+<p> <%= shortURL %> : <%= longURL %> </p>
 </div>
 
 
@@ -34,6 +42,5 @@
 
 
 </body>
-    <l> <%= shortURL %> : <%= longURL %> </l>
-        <% include partials/_header.ejs %>
+
 </html>
