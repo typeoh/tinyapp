@@ -1,3 +1,20 @@
- <header >
-   <p>This is the Header Partial</p>
-  </header>
+<header >
+
+ </header>
+<body>
+    <% if(username) {%>
+    <p>Your username is : <%= username %></p>
+    <form method="POST" action="/logout">
+    <button>Logout</button>
+    </form>
+    <% } else { %>
+
+    <form method="POST" action="/login">
+    <h2>Enter Your Username</h2>
+      <label for="username-input">username</label>
+      <input name="username" />
+      <button>Submit</button>
+    </form>
+    <% }; %>
+
+</body>
