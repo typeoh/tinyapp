@@ -2,19 +2,15 @@
 
  </header>
 <body>
-    <% if(username) {%>
-    <p>Your username is : <%= username %></p>
+ <a href= "http://localhost:8080/register"> Hey stranger - Register Here </a>
+ <div>
+ <a href= "http://localhost:8080/login"> It's been awhile - Login Over Here </a>
+ </div>
+    <% if(user) {%>
+    <p>Current user is: <%= user.id %></p>
     <form method="POST" action="/logout">
     <button>Logout</button>
     </form>
-    <% } else { %>
-
-    <form method="POST" action="/login">
-    <h2>Enter Your Username</h2>
-      <label for="username-input">username</label>
-      <input name="username" />
-      <button>Submit</button>
-    </form>
-    <% }; %>
+    <% } %>
 
 </body>
