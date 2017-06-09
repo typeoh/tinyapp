@@ -1,21 +1,44 @@
-//express_server passes URL data to urls_index.ejs
+//Essential requirements
 "use strict";
 const express = require("express");
 const app = express();
+app.set("view engine", "ejs")
 const PORT = process.env.PORT || 8080; // default port 8080
-const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
 
+//Body Parser
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
+
+//Cookie Parser
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
+//Locals
+app.use((req, res, next) => {
+  res.locals.user = usersDatabase[req.cookies.userid]; //this is the key of the cookie
+  next();
+});
+
+//Function that generates a random 6 character string
+function generateRandomString() {
+let result = '';
+    const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const length = chars.length;
+    for (var i = 0; i < 6; i++) result += chars[Math.floor(Math.random() * length)];
+    return result;
+}
+// Database of URLS with two defaults
 const urlDatabase = {
-  "b2xVn2": {
+  "123456": {
     longURL: "http://www.lighthouselabs.ca",
     userID: "RandomId1",
   }, 
-  "9sm5xK": {
+  "654321": {
     longURL: "http://www.google.com", 
     userID: "RandomId2",
   }
 };
+//Database of users with two defaults 
 const usersDatabase = {
   "RandomId1": {
     id: "RandomId1",
@@ -28,26 +51,9 @@ const usersDatabase = {
     password: "ferocious"
   }
 };
-//Configuration
-app.set("view engine", "ejs")
-//Generates a random 6 character string
-function generateRandomString() {
-let result = '';
-    const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const length = chars.length;
-    for (var i = 0; i < 6; i++) result += chars[Math.floor(Math.random() * length)];
-    return result;
-}
 function findUserByEmail(email){
    return Object.keys(usersDatabase).map((key) => usersDatabase[key]).find((user) => user.email === email)
 };
-//Middlewares
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
-app.use((req, res, next) => {
-  res.locals.user = usersDatabase[req.cookies.userid]; //this is the key of the cookie
-  next();
-});
 
 // Routes
 //Home redirect to /urls
@@ -77,7 +83,7 @@ app.get("/urls/new", (req, res) => {
   res.redirect("/login")
   }
 });
-//generates a random string for your new short url
+//generates a random string for the new short url
 app.post("/urls", (req, res) => {
   const rString = generateRandomString();
   urlDatabase[rString] = req.body.longURL;
@@ -108,20 +114,27 @@ app.get("/urls", (req, res) => {
   
 });
 app.get("/urls/:id", (req, res) => {
-    let valueOf = urlDatabase[req.params.shortURL];
-    let templateVars = {
-      shortURL: req.params.id,
-      longURL: valueOf.longURL
-    } 
-    if (!res.locals.user) {
-    res.status(403).send("You are not logged in");
-  } if (urlDatabase[shortURL].userID !== res.locals.user) {
-  res.status(403).send("Swiper no swiping");
-  } if (res.locals.user) {
-  res.render("urls_show", templateVars);
+  let valueOf = urlDatabase[req.params.id];
+  
+  if (!valueOf) {
+    return res.status(404).send("Url not found");
   }
-  else {
-    res.redirect("/login");
+  
+  let templateVars = {
+    shortURL: req.params.id,
+    longURL: valueOf.longURL
+  } 
+ 
+  if (!res.locals.user) {
+    return res.status(403).send("You are not logged in");
+  } 
+  if (urlDatabase[shortURL].userID !== res.locals.user) {
+    return res.status(403).send("Swiper no swiping");
+  } 
+  if (res.locals.user) {
+    return res.render("urls_show", templateVars);
+  } else {
+    return res.redirect("/login");
   }
 });
 app.post("/urls/:id", (req, res) => {
