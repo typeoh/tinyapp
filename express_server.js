@@ -19,6 +19,14 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/urls', (req, res, next) => {
+  if(!res.locals.user) {
+    res.redirect("/login");
+  } else {
+    next();
+  }
+});
+
 //Function that generates a random 6 character string
 function generateRandomString() {
 let result = '';
@@ -65,15 +73,41 @@ app.get("/", (req, res) => {
   res.redirect("/login")
   }
 });
-//Hello world page
-app.get("/hello", (req, res) => {
-  res.end("<html><body>Hello <b>World</b></body></html>\n");
-});
 //renders urlDatabase into JSON object
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-//renders urls/new page
+//redirect to long URL 
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.id;
+  const longURL = urlDatabase[shortURL];
+});
+
+//routes referring to collections of links
+
+//render index if user is logged in 
+app.get("/urls", (req, res) => {
+  if (res.locals.user) {
+    let templateVars = {
+        urls: urlDatabase
+      };
+      res.render("urls_index", templateVars);
+    }
+    else {
+    res.redirect("/login")
+    }
+  
+});
+//generates a random string for the new short url
+app.post("/urls", (req, res) => {
+  const rString = generateRandomString();
+  urlDatabase[rString] = {
+    longURL: req.body.longURL, 
+    userID: res.locals.user.id,
+  };
+  res.redirect("/urls/" + rString);
+});
+//urls new -> renders form for new url 
 app.get("/urls/new", (req, res) => {
   if (res.locals.user) {
     res.render("urls_new");
@@ -83,43 +117,22 @@ app.get("/urls/new", (req, res) => {
   res.redirect("/login")
   }
 });
-//generates a random string for the new short url
-app.post("/urls", (req, res) => {
-  const rString = generateRandomString();
-  urlDatabase[rString] = req.body.longURL;
-  var newString = res.send("Your new tiny string is " + "http://localhost:8080/u/" + rString);
-});
-//
-app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.id;
-  const longURL = urlDatabase[shortURL];
-});
+
+//routes referring to individual links
 
 //delete database urls
-app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect("/urls");
-});
 
-app.get("/urls", (req, res) => {
-  if (res.locals.user) {
-    let templateVars = {
-        urls: urlDatabase
-      };
-      res.render("urls_index", templateVars);
-  }
-  else {
-  res.redirect("/login")
-  }
-  
-});
+// TODO write a similar function that takes the URLdatabase
+//that filters it down to entries that match the user.id string 
+//renders my url index page
+
 app.get("/urls/:id", (req, res) => {
   let valueOf = urlDatabase[req.params.id];
   
   if (!valueOf) {
     return res.status(404).send("Url not found");
   }
-  
+
   let templateVars = {
     shortURL: req.params.id,
     longURL: valueOf.longURL
@@ -128,7 +141,7 @@ app.get("/urls/:id", (req, res) => {
   if (!res.locals.user) {
     return res.status(403).send("You are not logged in");
   } 
-  if (urlDatabase[shortURL].userID !== res.locals.user) {
+  if (urlDatabase[shortURL].userID !== res.locals.user.id) {
     return res.status(403).send("Swiper no swiping");
   } 
   if (res.locals.user) {
@@ -138,10 +151,16 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 app.post("/urls/:id", (req, res) => {
-//this adds new URL to urlDatabase object
+//this edits an existing URL
   urlDatabase[req.params.id] = req.body.longURL
   res.redirect("/urls/" + req.params.id);
 });
+//post that deletes a URL off databases
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
+});
+
 //login route that retains username cookie
 app.get("/login", (req, res) => {
   res.render("urls_login");
@@ -149,22 +168,22 @@ app.get("/login", (req, res) => {
 //function that returns the name of the keys in usersDatabase then uses the names of those keys to search through each 
 //object and return the value of the user.email
 app.post("/login", (req, res) => {
-let email = req.body.email;
-let password = req.body.password;
-let user = findUserByEmail(email);
+  let email = req.body.email;
+  let password = req.body.password;
+  let user = findUserByEmail(email);
 
-if(!user) {
-  res.status(403).send("Please Register");
-  return;
-}
-if(user.password !== password) {
-  res.status(403).send("Please Register");
-  return;
-} else {
-  res.cookie("userid", user.id);
-}
- res.redirect("/urls");
-});
+  if(!user) {
+    res.status(403).send("Please Register");
+    return;
+  }
+  if(user.password !== password) {
+    res.status(403).send("Please Register");
+    return;
+  } else {
+    res.cookie("userid", user.id);
+  }
+  res.redirect("/urls");
+  });
 
 app.post("/logout", (req, res) => {
   res.clearCookie("userid");
@@ -182,22 +201,21 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const id = generateRandomString();
   const { email, password } = req.body;
- 
 
   usersDatabase[id] = {
     id,
     email,
     password
   }
-if(email || password) {
-  res.cookie("userid", id)
-  res.redirect("/urls")
+  if(email || password) {
+    res.cookie("userid", id)
+    res.redirect("/urls")
 
-} else {
-  res.status(400).send(`400 Error: bad bad not god -
-  please enter email and password`)
-  }
-});
+  } else {
+    res.status(400).send(`400 Error: bad bad not god -
+    please enter email and password`)
+    }
+  });
 //end registration page
 
 app.listen(PORT, () => {
