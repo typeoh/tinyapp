@@ -7,10 +7,15 @@ const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "RandomId1",
+  }, 
+  "9sm5xK": {
+    longURL: "http://www.google.com", 
+    userID: "RandomId2",
+  }
 };
-
 const usersDatabase = {
   "RandomId1": {
     id: "RandomId1",
@@ -22,7 +27,7 @@ const usersDatabase = {
     email: "rocket@rocket.raccoon.com",
     password: "ferocious"
   }
-}
+};
 //Configuration
 app.set("view engine", "ejs")
 //Generates a random 6 character string
@@ -80,7 +85,7 @@ app.post("/urls", (req, res) => {
 });
 //
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
+  const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL];
 });
 
@@ -94,7 +99,7 @@ app.get("/urls", (req, res) => {
   if (res.locals.user) {
     let templateVars = {
         urls: urlDatabase
-        };
+      };
       res.render("urls_index", templateVars);
   }
   else {
@@ -103,23 +108,26 @@ app.get("/urls", (req, res) => {
   
 });
 app.get("/urls/:id", (req, res) => {
-  if (res.locals.user) {
-    let valueOf = urlDatabase[req.params.id];
+    let valueOf = urlDatabase[req.params.shortURL];
     let templateVars = {
       shortURL: req.params.id,
-      longURL: valueOf
-  };
-  res.render("urls_show", templateVars)
+      longURL: valueOf.longURL
+    } 
+    if (!res.locals.user) {
+    res.status(403).send("You are not logged in");
+  } if (urlDatabase[shortURL].userID !== res.locals.user) {
+  res.status(403).send("Swiper no swiping");
+  } if (res.locals.user) {
+  res.render("urls_show", templateVars);
   }
   else {
-  res.redirect("/login")
+    res.redirect("/login");
   }
-
 });
 app.post("/urls/:id", (req, res) => {
 //this adds new URL to urlDatabase object
   urlDatabase[req.params.id] = req.body.longURL
-  res.redirect("/urls" + req.params.id);
+  res.redirect("/urls/" + req.params.id);
 });
 //login route that retains username cookie
 app.get("/login", (req, res) => {
@@ -127,8 +135,6 @@ app.get("/login", (req, res) => {
 });
 //function that returns the name of the keys in usersDatabase then uses the names of those keys to search through each 
 //object and return the value of the user.email
-
-
 app.post("/login", (req, res) => {
 let email = req.body.email;
 let password = req.body.password;
@@ -156,12 +162,6 @@ app.post("/logout", (req, res) => {
 app.get("/register", (req, res) => {
   res.render("urls_register")
 });
-//login and register are the same thing
-//in that you are setting a new cookie that will the be used in the header
-//to keep the user logged in as they move around pages
-//they both should check the database to see if the user is in it
-//if it isn't they will register aka add the user to the database
-//if it is they will look to see if the id matches then log the person in
 
 //post to registration page
 //assigns a random six digit string
