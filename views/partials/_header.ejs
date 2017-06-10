@@ -2,12 +2,15 @@
 
  </header>
 <body>
+    <% if(!user) {%>
  <a href= "http://localhost:8080/register"> Hey stranger - Register Here </a>
- <div>
+ <div> 
  <a href= "http://localhost:8080/login"> It's been awhile - Login Over Here </a>
+     <% } %>
+
  </div>
     <% if(user) {%>
-    <p>Current user is: <%= user.id %></p>
+    <p>Current user is: <%= user.email %></p>
     <form method="POST" action="/logout">
     <button>Logout</button>
     </form>

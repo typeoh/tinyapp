@@ -12,8 +12,10 @@
 
       </p>
       <li>
-      <%= key %> : <%= urls[key].longURL %>
-       <a href="http://localhost:8080/urls/<%= key%>"> Edit </a>
+      
+      ShortURL:<a href="/u/<%= key %>"> <%= key %></a> LongURL:<%= urls[key].longURL %>
+      <a href=/u/:<%= key %> : <%= urls[key].longURL %>
+       <a href="http://localhost:8080/u/<%= key%>"> Edit </a>
         <form action="/urls/<%= key%>/delete" method="POST">
         <button>Delete </button>
         </form>
@@ -21,7 +23,7 @@
       <% }); %>
 
   </ul>
-    <a href= "http://localhost:8080/urls/new"> Follow me to submit your URL!</a>
+    <a href= "http://localhost:8080/urls/new"> Create a New Short Link</a>
 
 <divclass="jumbotron">
 

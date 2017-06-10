@@ -1,9 +1,15 @@
-//Essential requirements
+//TODO create function that renders long Urls into short Urls
+//
+//Requirements
 "use strict";
 const express = require("express");
 const app = express();
-app.set("view engine", "ejs")
+app.set("view engine", "ejs");
 const PORT = process.env.PORT || 8080; // default port 8080
+const cookieSession = require('cookie-session');
+
+//Bcrypt
+const bcrypt = require('bcrypt');
 
 //Body Parser
 const bodyParser = require("body-parser");
@@ -12,12 +18,18 @@ app.use(bodyParser.urlencoded({extended: true}));
 //Cookie Parser
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
+app.use(cookieSession({
+  name: "session",
+  keys: ["thetiniestofsecrets"],
+}));
 
 //Locals (points to userid cookie)
 app.use((req, res, next) => {
-  res.locals.user = usersDatabase[req.cookies.userid]; //this is the key of the cookie
+  res.locals.user = usersDatabase[req.session.user_id]; //this is the key of the cookie
+  //res.locals.user.id is returning undefined when registering because the cookie doesn't seem to be set? 
   next();
 });
+
 //(redirects to login if userid doesn't match cookie)
 app.use('/urls', (req, res, next) => {
   if(!res.locals.user) {
@@ -51,12 +63,12 @@ const usersDatabase = {
   "RandomId1": {
     id: "RandomId1",
     email: "groot@groot.little.com",
-    password: "iamgroot"
+    password: bcrypt.hashSync("iamgroot", 10)
   },
  "RandomId2": {
     id: "RandomId2",
     email: "rocket@rocket.raccoon.com",
-    password: "ferocious"
+    password: bcrypt.hashSync("ferocious", 10)
   }
 };
 function findUserByEmail(email){
@@ -77,10 +89,23 @@ app.get("/", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
+
 //redirect to long URL 
+// http://localhost:8080/u/b2xVn2 would redirect to its corresponding longURL (www.lighthouselabs.ca) a
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.id;
-  const longURL = urlDatabase[shortURL];
+  //create function that uses whatever has been entered as short url 
+  //to find its corresponding long url and
+  //redirect there 
+
+  let shortUrl = req.params.shortURL;//whatever has been entered into :shortURL
+  let longUrl = urlDatabase[shortUrl].longURL;
+
+  //  Object.keys(urlDatabase).forEach((key) => {
+  //     if(key === shortUrl) {
+  //     return key.longURL
+  // }
+  
+  res.redirect(longUrl);
 });
 
 //routes referring to collections of links
@@ -95,7 +120,7 @@ app.get("/urls", (req, res) => {
       }
     });
     return tailoredObject;
-}
+  }
   if(res.locals.user !== undefined){
       let templateVars = 
        {
@@ -105,7 +130,7 @@ app.get("/urls", (req, res) => {
       res.render("urls_index", templateVars);
   }
   else {
-    res.redirect("/login")
+    res.status(403).send("Please login.");
   }
   
 });
@@ -130,19 +155,14 @@ app.get("/urls/new", (req, res) => {
 });
 //routes referring to individual links
 
-//delete database urls
-
-// TODO create a function that filters it down to entries 
-//that match the user.id string 
 //route that shows users their new short url 
 app.get('/urls/:id', (req, res) => {
   const templateVars = {
-  shortURL: req.cookies.id,
+  shortURL: req.session.user_id,
   longURL: valueOf.longURL
-} 
+  } 
   const urlObject = urlDatabase[req.params.id];
 
-//Do I need this if they are simply adding a new url?
   if (res.locals.user) {
     return res.render("urls_show", templateVars);
   } else {
@@ -152,10 +172,12 @@ app.get('/urls/:id', (req, res) => {
 app.post("/urls/:id", (req, res) => {
 //this edits an existing URL
   const urlObject = urlDatabase[req.params.id];
+  console.log("I am the url Object", urlDatabase[req.params.id]);
   if (urlObject.userID !== res.locals.user.id) {
       return res.status(403).send("Bad bad. That URL doesn't belong to you");
   } else {
   urlDatabase[req.params.id] = req.body.longURL
+  console.log(urlDatabase[req.params.id]);
   res.redirect("/urls/" + req.params.id);
   }
 });
@@ -169,7 +191,6 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
   }
 });
-
 //login route that retains username cookie
 app.get("/login", (req, res) => {
   res.render("urls_login");
@@ -178,24 +199,22 @@ app.get("/login", (req, res) => {
 //object and return the value of the user.email
 app.post("/login", (req, res) => {
   let email = req.body.email;
-  let password = req.body.password;
   let user = findUserByEmail(email);
-
   if(!user) {
     res.status(403).send("Please Register");
-    return;
-  }
-  if(user.password !== password) {
+  } else if (!bcrypt.compareSync(req.body.password, user.password)) {
+    console.log("pw didn't match");
     res.status(403).send("Please Register");
-    return;
   } else {
-    res.cookie("userid", user.id);
+    req.session.user_id = user.id;
+    console.log("you done got logged in", req.session.user_id);
+    console.log("i am ", user.id);
+    res.redirect("/urls");
   }
-  res.redirect("/urls");
-  });
+});
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("userid");
+  req.session = null;
   res.redirect("/login");
 });
 
@@ -208,25 +227,34 @@ app.get("/register", (req, res) => {
 //assigns a random six digit string
 //returns an error message if no email or password is entered
 app.post("/register", (req, res) => {
-  const id = generateRandomString();
   const { email, password } = req.body;
-
-  usersDatabase[id] = {
-    id,
-    email,
-    password
-  }
-  if(email || password) {
-    res.cookie("userid", id)
-    res.redirect("/urls")
-
-  } else {
+  if (!email || !password) {
     res.status(400).send(`400 Error: bad bad not god -
     please enter email and password`)
-    }
-  });
+    return;
+  }
+  
+  const id = generateRandomString();
+  const hashPass = bcrypt.hashSync(password, 10);
+  req.session.user_id = res.locals.id; 
+  usersDatabase[res.locals.id] = {
+    id,
+    email,
+    hashPass
+  }
+  console.log(usersDatabase[res.locals.id]);
+  //having difficulty setting the cookie with the new cookie sessions 
+  
+  res.redirect("/urls")
+});
 //end registration page
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+// app.get("/urls/:id", (req, res) => {
+//   templateVars.shortURL = req.params.id;
+//   templateVars.longURL = urlDatabase[req.params.id].link;
+//   res.render("urls_show", templateVars);
+// });
