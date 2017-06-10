@@ -23,7 +23,8 @@ app.use(cookieSession({
   keys: ["thetiniestofsecrets"],
 }));
 
-//Locals (points to userid cookie)
+//(Middleware)
+//Locals
 app.use((req, res, next) => {
   res.locals.user = usersDatabase[req.session.user_id]; //this is the key of the cookie
   //res.locals.user.id is returning undefined when registering because the cookie doesn't seem to be set? 
@@ -38,7 +39,6 @@ app.use('/urls', (req, res, next) => {
     next();
   }
 });
-
 //Function that generates a random 6 character string
 function generateRandomString() {
 let result = '';
@@ -71,11 +71,14 @@ const usersDatabase = {
     password: bcrypt.hashSync("ferocious", 10)
   }
 };
+//Function that searches through usersDatabase by email and retrieves
+//User information for login email finds a match 
 function findUserByEmail(email){
    return Object.keys(usersDatabase).map((key) => usersDatabase[key]).find((user) => user.email === email)
 };
 
 // Routes
+//Get
 //Home redirect to /urls
 app.get("/", (req, res) => {
   if (res.locals.user) {
@@ -89,27 +92,6 @@ app.get("/", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-
-//redirect to long URL 
-// http://localhost:8080/u/b2xVn2 would redirect to its corresponding longURL (www.lighthouselabs.ca) a
-app.get("/u/:shortURL", (req, res) => {
-  //create function that uses whatever has been entered as short url 
-  //to find its corresponding long url and
-  //redirect there 
-
-  let shortUrl = req.params.shortURL;//whatever has been entered into :shortURL
-  let longUrl = urlDatabase[shortUrl].longURL;
-
-  //  Object.keys(urlDatabase).forEach((key) => {
-  //     if(key === shortUrl) {
-  //     return key.longURL
-  // }
-  
-  res.redirect(longUrl);
-});
-
-//routes referring to collections of links
-
 //render index if user is logged in and show only the urls belonging to user
 app.get("/urls", (req, res) => {
   function urlsForUser(user) {
@@ -134,6 +116,14 @@ app.get("/urls", (req, res) => {
   }
   
 });
+//when shortURL link is clicked it redirects to longURL website
+app.get("/u/:shortURL", (req, res) => {
+  let shortUrl = req.params.shortURL;
+  let longUrl = urlDatabase[shortUrl].longURL;
+  res.redirect(longUrl);
+});
+
+
 //creates new URL and adds userid cookie to userid 
 app.post("/urls", (req, res) => {
   const rString = generateRandomString();
@@ -159,9 +149,10 @@ app.get("/urls/new", (req, res) => {
 app.get('/urls/:id', (req, res) => {
   const templateVars = {
   shortURL: req.session.user_id,
-  longURL: valueOf.longURL
+  longURL: valueOf.longURL,
+  oldURL: req.params.id,
   } 
-  const urlObject = urlDatabase[req.params.id];
+  var urlObject = urlDatabase[req.params.id];
 
   if (res.locals.user) {
     return res.render("urls_show", templateVars);

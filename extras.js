@@ -51,4 +51,3 @@ var shortUrl = "123456"
       console.log(key.longURL);
   }
    })
-     console.log(urlDatabase[shortUr[longURL]])

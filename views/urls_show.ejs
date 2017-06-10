@@ -21,14 +21,16 @@
 <p>The new TinyApp</p>
 
  <form method="POST" action="/urls/<%= shortURL%>">
-    <h2>Update your short URL</h2>
-    <p>
+    <h2>Update your short URL</h2> 
+      <p> Your current shortURL is <%= oldURL %> </p>
+      <p>
       <label for="newlongURLinput">longURL</label>
       <input id="newlongURLinput" name="longURL">
       <button>Update!</button>
     </p>
   </form>
-<p> <%= shortURL %> : <%= longURL %> </p>
+
+<p> <% shortURL %> : <% longURL %> </p>
 </div>
 
 
