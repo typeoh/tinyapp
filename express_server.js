@@ -13,12 +13,12 @@ app.use(bodyParser.urlencoded({extended: true}));
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
-//Locals
+//Locals (points to userid cookie)
 app.use((req, res, next) => {
   res.locals.user = usersDatabase[req.cookies.userid]; //this is the key of the cookie
   next();
 });
-
+//(redirects to login if userid doesn't match cookie)
 app.use('/urls', (req, res, next) => {
   if(!res.locals.user) {
     res.redirect("/login");
@@ -85,20 +85,31 @@ app.get("/u/:shortURL", (req, res) => {
 
 //routes referring to collections of links
 
-//render index if user is logged in 
+//render index if user is logged in and show only the urls belonging to user
 app.get("/urls", (req, res) => {
-  if (res.locals.user) {
-    let templateVars = {
-        urls: urlDatabase
+  function urlsForUser(user) {
+    const tailoredObject = {};
+    Object.keys(urlDatabase).forEach((key) => {
+      if(urlDatabase[key].userID === user.id) {
+        tailoredObject[key] = urlDatabase[key];
+      }
+    });
+    return tailoredObject;
+}
+  if(res.locals.user !== undefined){
+      let templateVars = 
+       {
+      urls: urlsForUser(res.locals.user)
       };
+    
       res.render("urls_index", templateVars);
-    }
-    else {
+  }
+  else {
     res.redirect("/login")
-    }
+  }
   
 });
-//generates a random string for the new short url
+//creates new URL and adds userid cookie to userid 
 app.post("/urls", (req, res) => {
   const rString = generateRandomString();
   urlDatabase[rString] = {
@@ -117,33 +128,21 @@ app.get("/urls/new", (req, res) => {
   res.redirect("/login")
   }
 });
-
 //routes referring to individual links
 
 //delete database urls
 
-// TODO write a similar function that takes the URLdatabase
-//that filters it down to entries that match the user.id string 
-//renders my url index page
+// TODO create a function that filters it down to entries 
+//that match the user.id string 
+//route that shows users their new short url 
+app.get('/urls/:id', (req, res) => {
+  const templateVars = {
+  shortURL: req.cookies.id,
+  longURL: valueOf.longURL
+} 
+  const urlObject = urlDatabase[req.params.id];
 
-app.get("/urls/:id", (req, res) => {
-  let valueOf = urlDatabase[req.params.id];
-  
-  if (!valueOf) {
-    return res.status(404).send("Url not found");
-  }
-
-  let templateVars = {
-    shortURL: req.params.id,
-    longURL: valueOf.longURL
-  } 
- 
-  if (!res.locals.user) {
-    return res.status(403).send("You are not logged in");
-  } 
-  if (urlDatabase[shortURL].userID !== res.locals.user.id) {
-    return res.status(403).send("Swiper no swiping");
-  } 
+//Do I need this if they are simply adding a new url?
   if (res.locals.user) {
     return res.render("urls_show", templateVars);
   } else {
@@ -152,13 +151,23 @@ app.get("/urls/:id", (req, res) => {
 });
 app.post("/urls/:id", (req, res) => {
 //this edits an existing URL
+  const urlObject = urlDatabase[req.params.id];
+  if (urlObject.userID !== res.locals.user.id) {
+      return res.status(403).send("Bad bad. That URL doesn't belong to you");
+  } else {
   urlDatabase[req.params.id] = req.body.longURL
   res.redirect("/urls/" + req.params.id);
+  }
 });
 //post that deletes a URL off databases
 app.post("/urls/:id/delete", (req, res) => {
+  const urlObject = urlDatabase[req.params.id];
+  if (urlObject.userID !== res.locals.user.id) {
+    return res.status(403).send("Bad bad. That URL doesn't belong to you");
+  } else {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
+  }
 });
 
 //login route that retains username cookie

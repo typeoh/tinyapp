@@ -12,7 +12,7 @@
 
       </p>
       <li>
-      <%= key %> : <%= urls[key] %>
+      <%= key %> : <%= urls[key].longURL %>
        <a href="http://localhost:8080/urls/<%= key%>"> Edit </a>
         <form action="/urls/<%= key%>/delete" method="POST">
         <button>Delete </button>
