@@ -6,7 +6,6 @@ const express = require("express");
 const app = express();
 app.set("view engine", "ejs");
 const PORT = process.env.PORT || 8080; // default port 8080
-const cookieSession = require('cookie-session');
 
 //Bcrypt
 const bcrypt = require('bcrypt');
@@ -16,8 +15,7 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 //Cookie Parser
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
+const cookieSession = require('cookie-session');
 app.use(cookieSession({
   name: "session",
   keys: ["thetiniestofsecrets"],
@@ -154,13 +152,16 @@ app.get("/urls/new", (req, res) => {
 //   }
 // };
 //route that shows users their new short url 
-app.get('/u/:id', (req, res) => {
-  var urlObject = urlDatabase[req.params.id];  
-  const templateVars = {
-  longURL: urlDatabase[shortUrl].longURL,
-  shortURL: req.session.user_id,
-  oldURL: req.params.id
-} 
+app.get('/urls/:id', (req, res) => {
+  let urlObject = urlDatabase[req.params.id];  
+  console.log("the urlObject", urlObject);
+  var templateVars = {
+    shortURL: req.session.user_id,
+    longURL: urlObject.longURL,
+    oldURL: req.params.id
+  } 
+  res.render("urls_show", templateVars);
+
   if (res.locals.user) {
     return res.render("urls_show", templateVars);
   } else {
@@ -170,7 +171,7 @@ app.get('/u/:id', (req, res) => {
 app.post("/urls/:id", (req, res) => {
 //this edits an existing URL
   const urlObject = urlDatabase[req.params.id];
-  console.log("I am the url Object", urlDatabase[req.params.id]);
+  console.log("I am the url Object", urlObject);
   if (urlObject.userID !== res.locals.user.id) {
       return res.status(403).send("Bad bad. That URL doesn't belong to you");
   } else {
