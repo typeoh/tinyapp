@@ -15,7 +15,7 @@
       
       ShortURL:<a href="/u/<%= key %>"> <%= key %></a> LongURL:<%= urls[key].longURL %>
       <a href=/u/:<%= key %> : <%= urls[key].longURL %>
-       <a href="http://localhost:8080/u/<%= key%>"> Edit </a>
+       <a href="http://localhost:8080/urls/<%= key%>"> Edit </a>
         <form action="/urls/<%= key%>/delete" method="POST">
         <button>Delete </button>
         </form>

@@ -118,11 +118,10 @@ app.get("/urls", (req, res) => {
 });
 //when shortURL link is clicked it redirects to longURL website
 app.get("/u/:shortURL", (req, res) => {
-  let shortUrl = req.params.shortURL;
-  let longUrl = urlDatabase[shortUrl].longURL;
+  var shortUrl = req.params.shortURL;
+  var longUrl = urlDatabase[shortUrl].longURL;
   res.redirect(longUrl);
 });
-
 
 //creates new URL and adds userid cookie to userid 
 app.post("/urls", (req, res) => {
@@ -144,16 +143,24 @@ app.get("/urls/new", (req, res) => {
   }
 });
 //routes referring to individual links
-
+// const urlDatabase = {
+//   "123456": {
+//     longURL: "http://www.lighthouselabs.ca",
+//     userID: "RandomId1",
+//   }, 
+//   "654321": {
+//     longURL: "http://www.google.com", 
+//     userID: "RandomId2",
+//   }
+// };
 //route that shows users their new short url 
-app.get('/urls/:id', (req, res) => {
+app.get('/u/:id', (req, res) => {
+  var urlObject = urlDatabase[req.params.id];  
   const templateVars = {
+  longURL: urlDatabase[shortUrl].longURL,
   shortURL: req.session.user_id,
-  longURL: valueOf.longURL,
-  oldURL: req.params.id,
-  } 
-  var urlObject = urlDatabase[req.params.id];
-
+  oldURL: req.params.id
+} 
   if (res.locals.user) {
     return res.render("urls_show", templateVars);
   } else {
