@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 </head>
-
+<!--TODO - Update form so that it displays longURL to be edited
+Double check where we are supposed to be redirected after creating new URL-->
 <body class="container">
 
    <% include partials/_header %>
@@ -20,9 +21,10 @@
 
 <p>The new TinyApp</p>
 
- <form method="POST" action="/urls/<%= shortURL%>">
+ <form method="POST" action="/urls/<%= oldURL%>">
     <h2>Update your short URL</h2> 
-      <p> Your current shortURL is <%= oldURL %> </p>
+      <p> Your current long URL is <%= longURL %> </p>
+      <p> Your current short URL is <%= oldURL %> </p>
       <p>
       <label for="newlongURLinput">longURL</label>
       <input id="newlongURLinput" name="longURL">
@@ -30,7 +32,8 @@
     </p>
   </form>
 
-<p> <% shortURL %> : <% longURL %> </p>
+<p> <% oldURL %> <% longURL %> </p>
+<a href= "http://localhost:8080/urls"> Return to your Index</a>
 </div>
 
 

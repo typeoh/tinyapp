@@ -3,53 +3,27 @@
 <head>
   <% include partials/_header %>
 </head>
-
+  <h1>Welcome to TinyApp!</h1>
 <body class="container">
 
-<p> This is the Database </p>
+<p> This is your database: </p>
 <main>
   <ul> <% Object.keys(urls).forEach((key) => { %>
 
       </p>
       <li>
-      
-      ShortURL:<a href="/u/<%= key %>"> <%= key %></a> LongURL:<%= urls[key].longURL %>
-      <a href=/urls/<%= key %> : <%= urls[key].longURL %>
-       <a href="http://localhost:8080/u/<%= key%>"> Edit </a>
-        <form action="/urls/<%= key%>/delete" method="POST">
-        <button>Delete </button>
+        Your ShortURL:   <a href="/u/<%= key %>"> <%= key %></a>  LongURL:  <%= urls[key].longURL %>
+
+          <a href=/urls/<%= key %> : <%= urls[key].longURL %>
+            <a href="http://localhost:8080/u/<%= key%>"> Edit </a>
+            <form action="/urls/<%= key%>/delete" method="POST">
+          <button>Delete </button>
         </form>
-      </li>
+        </li>
       <% }); %>
 
   </ul>
     <a href= "http://localhost:8080/urls/new"> Create a New Short Link</a>
-
 <divclass="jumbotron">
-
-
-<h1>very very tiny</h1>
-
-<ul>
-    </ul>
-
-<p>The new TinyApp</p>
-
-
-</div>
-
-
-</main>
-
-
-<footer>
-
-</footer>
-
-
-</body>
-
-
-
 
 </html>
